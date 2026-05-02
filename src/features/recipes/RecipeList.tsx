@@ -6,9 +6,10 @@ interface RecipeListProps {
   recipes: Recipe[];
   categories: Category[];
   onEdit: (recipe: Recipe) => void;
+  onDelete: (recipeId: string) => void;
 }
 
-const RecipeList: React.FC<RecipeListProps> = ({ recipes, categories, onEdit }) => {
+const RecipeList: React.FC<RecipeListProps> = ({ recipes, categories, onEdit, onDelete }) => {
   const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
@@ -117,6 +118,7 @@ const RecipeList: React.FC<RecipeListProps> = ({ recipes, categories, onEdit }) 
           recipe={selectedRecipe} 
           categories={categories} 
           onClose={() => setSelectedRecipe(null)} 
+          onDelete={onDelete}
         />
       )}
     </div>

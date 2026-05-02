@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import type { User } from 'firebase/auth'
 import { auth } from './services/firebase'
-import { createRecipe, updateRecipe } from './services/recipeService'
+import { createRecipe, updateRecipe, deleteRecipe } from './services/recipeService'
 import { createCategory } from './services/categoryService'
 import { createMealPlan, deleteMealPlan } from './services/mealPlanService'
 import { createShoppingListItem, updateShoppingListItem, deleteShoppingListItem } from './services/shoppingListService'
@@ -16,9 +16,10 @@ import Inbox from './features/recipes/Inbox'
 import CategoryManager from './features/categories/CategoryManager'
 import MealPlanner from './features/planner/MealPlanner'
 import ShoppingList from './features/shopping-list/ShoppingList'
+import SubmissionInfo from './components/common/SubmissionInfo'
 import type { Recipe, MealType, RecipeSubmission } from './types'
 
-type Tab = 'list' | 'create' | 'categories' | 'edit' | 'planner' | 'shopping' | 'inbox'
+type Tab = 'list' | 'create' | 'categories' | 'edit' | 'planner' | 'shopping' | 'inbox' | 'invite'
 
 function App() {
   const [user, setUser] = useState<User | null>(null)
@@ -72,6 +73,23 @@ function App() {
   const handleEditRecipe = (recipe: Recipe) => {
     setEditingRecipe(recipe)
     setActiveTab('edit')
+  }
+
+  const handleDeleteRecipe = async (recipeId: string) => {
+    if (!user) return
+    try {
+      // 1. Delete associated meal plans
+      const associatedMealPlans = mealPlans.filter(mp => mp.recipeId === recipeId)
+      for (const mp of associatedMealPlans) {
+        await deleteMealPlan(user.uid, mp.id)
+      }
+      
+      // 2. Delete the recipe
+      await deleteRecipe(user.uid, recipeId)
+    } catch (error) {
+      console.error("Error deleting recipe:", error)
+      alert("Failed to delete recipe.")
+    }
   }
 
   const handleCancelForm = () => {
@@ -207,6 +225,12 @@ function App() {
           >
             Tags
           </button>
+          <button 
+            className={activeTab === 'invite' ? 'active' : ''} 
+            onClick={() => setActiveTab('invite')}
+          >
+            Invite
+          </button>
         </nav>
       </header>
 
@@ -216,6 +240,7 @@ function App() {
             recipes={recipes} 
             categories={categories} 
             onEdit={handleEditRecipe} 
+            onDelete={handleDeleteRecipe}
           />
         )}
         {activeTab === 'inbox' && (
@@ -239,6 +264,9 @@ function App() {
             categories={categories} 
             onAddCategory={handleAddCategory} 
           />
+        )}
+        {activeTab === 'invite' && (
+          <SubmissionInfo />
         )}
         {activeTab === 'planner' && (
           <MealPlanner 

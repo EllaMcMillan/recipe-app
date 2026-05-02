@@ -153,6 +153,21 @@ button:active {
   cursor: pointer;
 }
 
+.danger {
+  background-color: #fdf2f2;
+  color: #9b1c1c;
+  border: 1px solid #fecaca;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.danger:hover {
+  background-color: #9b1c1c;
+  color: white;
+}
+
 .logout-btn {
   background: none;
   border: 1px solid var(--border-color);
@@ -398,6 +413,13 @@ input:focus, textarea:focus {
 
 .close-modal-btn:hover {
   color: var(--text-main);
+}
+
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
 }
 
 .detail-meta {
@@ -666,6 +688,71 @@ input:focus, textarea:focus {
   border-radius: 10px;
   margin-left: 0.4rem;
   vertical-align: middle;
+}
+
+/* Submission Info */
+.submission-info {
+  max-width: 650px;
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+.info-card {
+  background: white;
+  border: 1px solid var(--border-color);
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+.info-card h2 {
+  color: var(--accent-primary);
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+.form-link-container {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: #faf9f6;
+  border-radius: var(--radius);
+  border-left: 4px solid var(--accent-primary);
+}
+
+.link-box {
+  background: white;
+  border: 1px solid var(--border-color);
+  padding: 0.8rem;
+  margin: 0.5rem 0;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.link-box code {
+  color: var(--accent-secondary);
+  font-weight: bold;
+}
+
+.instructions-section h3 {
+  margin-top: 2rem;
+  font-size: 1.2rem;
+}
+
+.instructions-section ol {
+  padding-left: 1.2rem;
+}
+
+.instructions-section li {
+  margin-bottom: 1rem;
+}
+
+.privacy-note {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-muted);
 }
 
 /* Auth */

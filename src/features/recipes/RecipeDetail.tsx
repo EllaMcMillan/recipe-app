@@ -5,11 +5,19 @@ interface RecipeDetailProps {
   recipe: Recipe;
   categories: Category[];
   onClose: () => void;
+  onDelete: (recipeId: string) => void;
 }
 
-const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, categories, onClose }) => {
+const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, categories, onClose, onDelete }) => {
   const getCategoryName = (id: string) => {
     return categories.find(c => c.id === id)?.name || 'Unknown';
+  };
+
+  const handleDelete = () => {
+    if (window.confirm(`Are you sure you want to delete "${recipe.title}"? This will also remove it from any meal plans.`)) {
+      onDelete(recipe.id);
+      onClose();
+    }
   };
 
   return (
@@ -18,7 +26,10 @@ const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, categories, onClose
         <button className="close-modal-btn" onClick={onClose} title="Close">×</button>
         
         <header className="modal-header">
-          <h2>{recipe.title}</h2>
+          <div className="header-actions">
+            <h2>{recipe.title}</h2>
+            <button className="danger" onClick={handleDelete}>Delete Recipe</button>
+          </div>
           <div className="card-categories">
             {recipe.categoryIds.map(id => (
               <span key={id} className="category-tag">
