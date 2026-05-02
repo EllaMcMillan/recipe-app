@@ -18,6 +18,7 @@ import MealPlanner from './features/planner/MealPlanner'
 import ShoppingList from './features/shopping-list/ShoppingList'
 import SubmissionInfo from './components/common/SubmissionInfo'
 import type { Recipe, MealType, RecipeSubmission } from './types'
+import logo from './assets/logo.png';
 
 type Tab = 'list' | 'create' | 'categories' | 'edit' | 'planner' | 'shopping' | 'inbox' | 'invite'
 
@@ -182,7 +183,10 @@ function App() {
     <div className="app-container">
       <header>
         <div className="header-top">
-          <h1>My Cookbook</h1>
+          <div className="app-title">
+            <img src={logo} alt="My Cookbook logo" className="app-logo" />
+            <h1>My Cookbook</h1>
+          </div>          
           <div className="user-info">
             <span>{user.email}</span>
             <button onClick={handleLogout} className="logout-btn">Logout</button>

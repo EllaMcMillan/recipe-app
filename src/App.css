@@ -823,3 +823,16 @@ input:focus, textarea:focus {
     grid-template-columns: 1fr;
   }
 }
+
+.app-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.app-logo {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  border-radius: 12px;
+}
