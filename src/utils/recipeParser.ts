@@ -2,7 +2,9 @@ export interface ParsedRecipe {
   title?: string;
   ingredients?: string[];
   instructions?: string[];
-  servings?: number;
+  servings?: string;
+  prepTime?: string;
+  cookTime?: string;
   warnings: string[];
 }
 
@@ -19,7 +21,7 @@ export function parseRecipeText(text: string): ParsedRecipe {
 
   // Heuristic: First line might be the title if it's not a common keyword
   const firstLine = lines[0];
-  const keywords = ['ingredients', 'instructions', 'steps', 'directions', 'servings', 'notes', 'prep', 'cook'];
+  const keywords = ['ingredients', 'instructions', 'steps', 'directions', 'servings', 'notes', 'prep', 'cook', 'bake', 'makes'];
   if (!keywords.some(k => firstLine.toLowerCase().includes(k))) {
     result.title = firstLine;
   } else {
@@ -74,18 +76,45 @@ export function parseRecipeText(text: string): ParsedRecipe {
     result.warnings.push('Instructions section not found. Please review the text.');
   }
 
-  // Extract Servings (very basic)
-  const servingsLine = lines.find(line => line.toLowerCase().includes('servings'));
-  if (servingsLine) {
-    const match = servingsLine.match(/\d+/);
-    if (match) {
-      result.servings = parseInt(match[0]);
+  // Helper for regex matching across lines
+  const findMatch = (patterns: RegExp[]) => {
+    for (const line of lines) {
+      for (const pattern of patterns) {
+        const match = line.match(pattern);
+        if (match && match[1]) {
+          return match[1].trim();
+        }
+      }
     }
-  }
-  
+    return null;
+  };
+
+  // Extract Servings
+  // Patterns: "serves 4", "servings: 4", "makes 20 cookies", "makes about 20 cookies"
+  result.servings = findMatch([
+    /serves\s+(.+)/i,
+    /servings:?\s+(.+)/i,
+    /makes\s+(.+)/i
+  ]) || undefined;
+
   if (!result.servings) {
     result.warnings.push('Serving size not detected. Add manually if needed.');
   }
+
+  // Extract Prep Time
+  // Patterns: "prep time: 10 min", "prep: 10 minutes"
+  result.prepTime = findMatch([
+    /prep\s+time:?\s+(.+)/i,
+    /prep:?\s+(.+)/i
+  ]) || undefined;
+
+  // Extract Cook Time
+  // Patterns: "cook time: 8 min", "bake time: 8 minutes", "cooking time: 8 mins"
+  result.cookTime = findMatch([
+    /cook\s+time:?\s+(.+)/i,
+    /bake\s+time:?\s+(.+)/i,
+    /cooking\s+time:?\s+(.+)/i
+  ]) || undefined;
 
   return result;
 }

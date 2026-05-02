@@ -10,11 +10,14 @@ interface RecipeListProps {
 
 const RecipeList: React.FC<RecipeListProps> = ({ recipes, categories, onEdit }) => {
   const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
 
-  const filteredRecipes = filterCategoryId === 'all' 
-    ? recipes 
-    : recipes.filter(r => r.categoryIds.includes(filterCategoryId));
+  const filteredRecipes = recipes.filter(r => {
+    const matchesCategory = filterCategoryId === 'all' || r.categoryIds.includes(filterCategoryId);
+    const matchesSearch = r.title.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const getCategoryName = (id: string) => {
     return categories.find(c => c.id === id)?.name || 'Unknown';
@@ -30,17 +33,29 @@ const RecipeList: React.FC<RecipeListProps> = ({ recipes, categories, onEdit }) 
       <div className="list-header">
         <h2>My Recipes ({filteredRecipes.length})</h2>
         <div className="filter-controls">
-          <label htmlFor="category-filter">Filter by:</label>
-          <select 
-            id="category-filter"
-            value={filterCategoryId}
-            onChange={(e) => setFilterCategoryId(e.target.value)}
-          >
-            <option value="all">All Categories</option>
-            {categories.map(cat => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
-            ))}
-          </select>
+          <div className="search-box">
+            <label htmlFor="recipe-search" className="visually-hidden">Search recipes</label>
+            <input 
+              id="recipe-search"
+              type="text" 
+              placeholder="Search recipes..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="category-filter">
+            <label htmlFor="category-filter">Filter by:</label>
+            <select 
+              id="category-filter"
+              value={filterCategoryId}
+              onChange={(e) => setFilterCategoryId(e.target.value)}
+            >
+              <option value="all">All Categories</option>
+              {categories.map(cat => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 

@@ -6,23 +6,28 @@ import { createRecipe, updateRecipe } from './services/recipeService'
 import { createCategory } from './services/categoryService'
 import { createMealPlan, deleteMealPlan } from './services/mealPlanService'
 import { createShoppingListItem, updateShoppingListItem, deleteShoppingListItem } from './services/shoppingListService'
+import { updateSubmissionStatus } from './services/submissionService'
 import { useFirestoreData } from './hooks/useFirestoreData'
 import './App.css'
 import Auth from './features/auth/Auth'
 import RecipeList from './features/recipes/RecipeList'
 import RecipeForm from './features/recipes/RecipeForm'
+import Inbox from './features/recipes/Inbox'
 import CategoryManager from './features/categories/CategoryManager'
 import MealPlanner from './features/planner/MealPlanner'
 import ShoppingList from './features/shopping-list/ShoppingList'
-import type { Recipe, MealType } from './types'
+import type { Recipe, MealType, RecipeSubmission } from './types'
 
-type Tab = 'list' | 'create' | 'categories' | 'edit' | 'planner' | 'shopping'
+type Tab = 'list' | 'create' | 'categories' | 'edit' | 'planner' | 'shopping' | 'inbox'
 
 function App() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<Tab>('list')
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null)
+  const [preloadedRawText, setPreloadedRawText] = useState<string | null>(null)
+  const [preloadedTitle, setPreloadedTitle] = useState<string | null>(null)
+  const [activeSubmissionId, setActiveSubmissionId] = useState<string | null>(null)
 
   // Auth State
   useEffect(() => {
@@ -34,7 +39,7 @@ function App() {
   }, [])
 
   // Live Firestore Data Hook
-  const { recipes, categories, mealPlans, manualGroceryItems } = useFirestoreData(user)
+  const { recipes, categories, mealPlans, manualGroceryItems, submissions } = useFirestoreData(user)
 
   const handleLogout = () => signOut(auth)
 
@@ -48,6 +53,14 @@ function App() {
       } else {
         const { id, userId, createdAt, updatedAt, ...newData } = recipeData
         await createRecipe(user.uid, newData as any) 
+        
+        // If this came from a submission, mark it as reviewed
+        if (activeSubmissionId) {
+          await updateSubmissionStatus(activeSubmissionId, 'reviewed')
+          setActiveSubmissionId(null)
+          setPreloadedRawText(null)
+          setPreloadedTitle(null)
+        }
       }
       setActiveTab('list')
     } catch (error) {
@@ -63,7 +76,20 @@ function App() {
 
   const handleCancelForm = () => {
     setEditingRecipe(null)
+    setPreloadedRawText(null)
+    setPreloadedTitle(null)
+    setActiveSubmissionId(null)
     setActiveTab('list')
+  }
+
+  const handleReviewSubmission = (submission: RecipeSubmission) => {
+    // Prepend title to raw text to help parser identify it
+    const enhancedRawText = `${submission.recipeName}\n\n${submission.rawText}`
+    setPreloadedRawText(enhancedRawText)
+    setPreloadedTitle(submission.recipeName)
+    setActiveSubmissionId(submission.id)
+    setEditingRecipe(null)
+    setActiveTab('create')
   }
 
   const handleAddCategory = async (name: string) => {
@@ -152,6 +178,12 @@ function App() {
             Recipes
           </button>
           <button 
+            className={activeTab === 'inbox' ? 'active' : ''} 
+            onClick={() => setActiveTab('inbox')}
+          >
+            Inbox {submissions.length > 0 && <span className="tab-badge">{submissions.length}</span>}
+          </button>
+          <button 
             className={activeTab === 'create' ? 'active' : ''} 
             onClick={() => setActiveTab('create')}
           >
@@ -186,10 +218,18 @@ function App() {
             onEdit={handleEditRecipe} 
           />
         )}
+        {activeTab === 'inbox' && (
+          <Inbox 
+            submissions={submissions}
+            onReview={handleReviewSubmission}
+          />
+        )}
         {(activeTab === 'create' || activeTab === 'edit') && (
           <RecipeForm 
             categories={categories} 
             initialRecipe={editingRecipe || undefined}
+            initialPasteText={preloadedRawText || undefined}
+            initialTitle={preloadedTitle || undefined}
             onSave={handleSaveRecipe} 
             onCancel={handleCancelForm} 
           />

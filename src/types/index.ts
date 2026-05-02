@@ -5,7 +5,7 @@ export interface Recipe {
   sourceUrl?: string;
   ingredients: string[]; // Starting with simple array as per spec (array of strings or structured objects)
   instructions: string[];
-  servings?: number | null;
+  servings?: string;
   prepTime?: string;
   cookTime?: string;
   notes?: string;
@@ -41,4 +41,14 @@ export interface GroceryListItem {
   unit?: string;
   category?: string;
   checked: boolean;
+}
+
+export interface RecipeSubmission {
+  id: string;
+  name: string;
+  recipeName: string;
+  rawText: string;
+  status: 'new' | 'reviewed';
+  createdAt?: any; // Firestore timestamp
+  timestamp?: any; // Alternative field name
 }

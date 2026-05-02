@@ -5,18 +5,20 @@ import { parseRecipeText } from '../../utils/recipeParser';
 interface RecipeFormProps {
   categories: Category[];
   initialRecipe?: Recipe;
+  initialPasteText?: string;
+  initialTitle?: string;
   onSave: (recipe: Recipe) => void;
   onCancel: () => void;
 }
 
-const RecipeForm: React.FC<RecipeFormProps> = ({ categories, initialRecipe, onSave, onCancel }) => {
-  const [mode, setMode] = useState<'manual' | 'paste'>('manual');
-  const [pasteText, setPasteText] = useState('');
+const RecipeForm: React.FC<RecipeFormProps> = ({ categories, initialRecipe, initialPasteText, initialTitle, onSave, onCancel }) => {
+  const [mode, setMode] = useState<'manual' | 'paste'>(initialPasteText ? 'paste' : 'manual');
+  const [pasteText, setPasteText] = useState(initialPasteText || '');
   const [warnings, setWarnings] = useState<string[]>([]);
 
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState(initialTitle || '');
   const [sourceUrl, setSourceUrl] = useState('');
-  const [servings, setServings] = useState<number | null>(null);
+  const [servings, setServings] = useState('');
   const [prepTime, setPrepTime] = useState('');
   const [cookTime, setCookTime] = useState('');
   const [ingredientsRaw, setIngredientsRaw] = useState('');
@@ -29,7 +31,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ categories, initialRecipe, onSa
     if (initialRecipe) {
       setTitle(initialRecipe.title);
       setSourceUrl(initialRecipe.sourceUrl || '');
-      setServings(initialRecipe.servings ?? null);
+      setServings(initialRecipe.servings || '');
       setPrepTime(initialRecipe.prepTime || '');
       setCookTime(initialRecipe.cookTime || '');
       setIngredientsRaw(initialRecipe.ingredients.join('\n'));
@@ -42,12 +44,28 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ categories, initialRecipe, onSa
   const handleParse = () => {
     const parsed = parseRecipeText(pasteText);
     
-    if (parsed.title) setTitle(parsed.title);
-    if (parsed.ingredients) setIngredientsRaw(parsed.ingredients.join('\n'));
-    if (parsed.instructions) setInstructionsRaw(parsed.instructions.join('\n'));
-    if (parsed.servings) setServings(parsed.servings);
+    const newTitle = parsed.title || title;
+    const newIngredients = parsed.ingredients ? parsed.ingredients.join('\n') : ingredientsRaw;
+    const newInstructions = parsed.instructions ? parsed.instructions.join('\n') : instructionsRaw;
+    const newServings = parsed.servings || servings;
+
+    if (parsed.title && !title) setTitle(parsed.title);
+    if (parsed.ingredients) setIngredientsRaw(newIngredients);
+    if (parsed.instructions) setInstructionsRaw(newInstructions);
+    if (parsed.servings) setServings(newServings);
+    if (parsed.prepTime) setPrepTime(parsed.prepTime);
+    if (parsed.cookTime) setCookTime(parsed.cookTime);
     
-    setWarnings(parsed.warnings);
+    // Filter out warnings for fields that are now filled
+    const filteredWarnings = parsed.warnings.filter(warning => {
+      if (warning.includes('Title') && newTitle.trim() !== '') return false;
+      if (warning.includes('Ingredients') && newIngredients.trim() !== '') return false;
+      if (warning.includes('Instructions') && newInstructions.trim() !== '') return false;
+      if (warning.includes('Serving') && newServings.trim() !== '') return false;
+      return true;
+    });
+
+    setWarnings(filteredWarnings);
     setMode('manual');
   };
 
@@ -65,7 +83,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ categories, initialRecipe, onSa
       userId: initialRecipe?.userId || 'local-user',
       title,
       sourceUrl: sourceUrl.trim(),
-      servings: servings ?? null,
+      servings: servings.trim(),
       prepTime: prepTime.trim(),
       cookTime: cookTime.trim(),
       ingredients: ingredientsRaw.split('\n').filter(i => i.trim() !== ''),
@@ -150,9 +168,10 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ categories, initialRecipe, onSa
             <label htmlFor="servings">Servings</label>
             <input
               id="servings"
-              type="number"
-              value={servings ?? ''}
-              onChange={(e) => setServings(e.target.value ? parseInt(e.target.value) : null)}
+              type="text"
+              placeholder="e.g. serves 4 or makes 24 cookies"
+              value={servings}
+              onChange={(e) => setServings(e.target.value)}
             />
           </div>
           <div className="form-group">
